@@ -26,7 +26,7 @@ def make_chord(freqs):
         p.frequency = hz
         n = note.Note()
         n.pitch = p
-        
+
         n.volume.velocity = 80
         if hz > 1000:
             n.volume.velocity *= 0.8
@@ -44,7 +44,7 @@ def make_chord_with_velocity(freqs, intensities):
         p.frequency = hz
         n = note.Note()
         n.pitch = p
-        
+
         n.volume.velocity = 100 - abs(ints)
 
         c.add(n)  # TODO: only include if it was not in the previous n chords
@@ -79,7 +79,7 @@ def make_stream(top_freqs):
                 dur = 0.25
             else:
                 dur += 0.25
-            
+
         n = note.Note()
         p = pitch.Pitch()
         p.frequency = freq
@@ -101,7 +101,7 @@ def compute_top_frequencies(spec, n_peaks):
         intensities = []
         time_slice = time_slice[:172]  # remove high frequencies (2048: bin 128 = 3000 Hz, bin 86 = 2015 Hz)
         # 4096: 256 = 3000 Hz, 172 = 2015 Hz
-        
+
         # time_slice = mute_low_volume(time_slice) # causes div by zero?!
 
         # filter out frequencies < 70 Hz
@@ -153,7 +153,7 @@ def postprocess(top_freqs):
     by_voice = freqs.T
     for i in range(len(by_voice)):
         by_voice[i] = savgol_filter(by_voice[i], 5, 1)
-    
+
     new_freqs = by_voice.T
     for i in range(len(new_freqs)):
         top_freqs[i] = (new_freqs[i], top_freqs[i][1])
@@ -167,7 +167,7 @@ def generate_midi(data, sample_rate):
     db = librosa.amplitude_to_db(spec, ref=np.max)
 
     top_freqs = compute_top_frequencies(db, n_peaks=5)
-    
+
     postprocess(top_freqs)
     s = make_stream(top_freqs)
     write_stream("yuzo.mid", s)
@@ -196,7 +196,7 @@ def plot_db(timeslice):
     plt.ylabel('dB')
     plt.xscale('log')
     plt.show()
-    
+
 
 def main():
     data, sample_rate = sf.read("data/yuzo.wav", dtype='float32')
