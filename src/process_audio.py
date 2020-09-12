@@ -12,9 +12,9 @@ returns sorted list of (idx, value)
 def peaks(seq):
     data = []
     for i, x in enumerate(seq):
-        if i == 0 or i == len(seq) - 1:
+        if i <= 1 or i >= len(seq) - 2:
             continue
-        if seq[i - 1] < x and seq[i + 1] < x:
+        if seq[i - 2] < seq[i - 1] < x and seq[i + 2] < seq[i + 1] < x:
             data.append((i, x))
     return sorted(data, key=lambda x: -x[1])
 
@@ -51,6 +51,11 @@ def make_chord_with_velocity(freqs, intensities):
         c.duration = duration.Duration(0.25)
     return c
 
+
+def db_to_vol(db):
+    return max(0, 127 - 3 * abs(db))
+
+
 def make_stream(top_freqs):
     s = stream.Stream()
 
@@ -58,11 +63,13 @@ def make_stream(top_freqs):
     intensities = np.array([i for (f, i) in top_freqs])
 
     print(np.shape(freqs.T))
-    for voice in freqs.T:
+    for voice, ints in zip(freqs.T, intensities.T):
         par = stream.Part()
         # offset = 0
         freq = voice[0]
         dur = 0.25
+        vol = db_to_vol(ints[0])
+
         for note_idx in range(1, len(voice)):
             if voice[note_idx] != freq:
                 n = note.Note()
@@ -70,13 +77,16 @@ def make_stream(top_freqs):
                 p.frequency = freq
                 n.pitch = p
                 n.duration = duration.Duration(dur)
+                n.volume.velocity = vol
                 par.append(n)
+
                 # s.insertIntoNoteOrChord(offset, n)
                 # offset += dur
 
                 # reset
                 freq = voice[note_idx]
                 dur = 0.25
+                vol = db_to_vol(ints[note_idx])
             else:
                 dur += 0.25
 
@@ -85,14 +95,19 @@ def make_stream(top_freqs):
         p.frequency = freq
         n.pitch = p
         n.duration = duration.Duration(dur)
+        n.volume.velocity = vol
         par.append(n)
         s.insert(0, par)
-        # s.insertIntoNoteOrChord(offset, n)
     return s #.chordify()
 
-def mute_low_volume(seq):
-    return [x if x > -40 else -100 for x in seq]
+ZERO_VOLUME = -80 # dB
 
+def mute_low_volume(seq):
+    return [x if x > -60 else ZERO_VOLUME for x in seq]
+
+'''
+return [(pitches, intensities), ... for each time step]
+'''
 def compute_top_frequencies(spec, n_peaks):
     bin2freq = dict(enumerate(librosa.fft_frequencies(sr=48000, n_fft=4096)))
     top_freqs = []
@@ -102,11 +117,11 @@ def compute_top_frequencies(spec, n_peaks):
         time_slice = time_slice[:172]  # remove high frequencies (2048: bin 128 = 3000 Hz, bin 86 = 2015 Hz)
         # 4096: 256 = 3000 Hz, 172 = 2015 Hz
 
-        # time_slice = mute_low_volume(time_slice) # causes div by zero?!
+        time_slice = mute_low_volume(time_slice)
 
         # filter out frequencies < 70 Hz
         for i in range(6):
-            time_slice[i] = -100
+            time_slice[i] = ZERO_VOLUME
 
         time_slice = savgol_filter(time_slice, 9, 3)  # smooth the curve
         for (idx, value) in peaks(time_slice)[:n_peaks]:
@@ -114,6 +129,12 @@ def compute_top_frequencies(spec, n_peaks):
             pitches.append(hz)
             intensities.append(value)
         pitches.sort()
+
+        # account for not enough peaks (silence)
+        while len(pitches) < n_peaks:
+            pitches.append(0)
+            intensities.append(ZERO_VOLUME)
+
         top_freqs.append((pitches, intensities))
     return top_freqs
 
@@ -126,7 +147,7 @@ def write(path, piece):
     s.write("midi", path)
 
 def write_stream(path, s):
-    s.insert(0, tempo.MetronomeMark(number=1000))
+    s.insert(0, tempo.MetronomeMark(number=1500))
     s.write("midi", path)
 
 
@@ -149,8 +170,9 @@ def postprocess(top_freqs):
     #         if top_freqs[i - 1][0][voice] == top_freqs[i + 1][0][voice]:
     #             top_freqs[i][0][voice] = top_freqs[i - 1][0][voice]
 
-    freqs = np.array([f for (f, i) in top_freqs])
-    by_voice = freqs.T
+    freqs = np.array([f for (f, i) in top_freqs])  # timesteps x n_peaks
+    by_voice = freqs.T  # n_peaks x timesteps
+
     for i in range(len(by_voice)):
         by_voice[i] = savgol_filter(by_voice[i], 5, 1)
 
@@ -168,7 +190,7 @@ def generate_midi(data, sample_rate):
 
     top_freqs = compute_top_frequencies(db, n_peaks=5)
 
-    postprocess(top_freqs)
+    # postprocess(top_freqs)
     s = make_stream(top_freqs)
     write_stream("yuzo.mid", s)
 
@@ -176,7 +198,7 @@ def generate_midi(data, sample_rate):
     # for freqs, intensities in top_freqs:
     #     # piece.append(make_chord(freqs))
     #     piece.append(make_chord_with_velocity(freqs, intensities))
-    # write("yuzo2.mid", piece)
+    # write("erhu.mid", piece)
 
 
 def plot_spec(spec):
@@ -187,6 +209,7 @@ def plot_spec(spec):
     fig.colorbar(img, ax=ax, format='%+2.0f dB')
     ax.set(title='stft')
     plt.savefig("plot.png")
+
 
 def plot_db(timeslice):
     bin2freq = dict(enumerate(librosa.fft_frequencies(sr=48000, n_fft=2048)))
