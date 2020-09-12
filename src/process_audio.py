@@ -51,6 +51,45 @@ def make_chord_with_velocity(freqs, intensities):
         c.duration = duration.Duration(0.25)
     return c
 
+def make_stream(top_freqs):
+    s = stream.Stream()
+
+    freqs = np.array([f for (f, i) in top_freqs])
+    intensities = np.array([i for (f, i) in top_freqs])
+
+    print(np.shape(freqs.T))
+    for voice in freqs.T:
+        par = stream.Part()
+        # offset = 0
+        freq = voice[0]
+        dur = 0.25
+        for note_idx in range(1, len(voice)):
+            if voice[note_idx] != freq:
+                n = note.Note()
+                p = pitch.Pitch()
+                p.frequency = freq
+                n.pitch = p
+                n.duration = duration.Duration(dur)
+                par.append(n)
+                # s.insertIntoNoteOrChord(offset, n)
+                # offset += dur
+
+                # reset
+                freq = voice[note_idx]
+                dur = 0.25
+            else:
+                dur += 0.25
+            
+        n = note.Note()
+        p = pitch.Pitch()
+        p.frequency = freq
+        n.pitch = p
+        n.duration = duration.Duration(dur)
+        par.append(n)
+        s.insert(0, par)
+        # s.insertIntoNoteOrChord(offset, n)
+    return s #.chordify()
+
 def mute_low_volume(seq):
     return [x if x > -40 else -100 for x in seq]
 
@@ -84,6 +123,10 @@ def write(path, piece):
     s.append(tempo.MetronomeMark(number=1000))
     for chord in piece:
         s.append(chord)
+    s.write("midi", path)
+
+def write_stream(path, s):
+    s.insert(0, tempo.MetronomeMark(number=1000))
     s.write("midi", path)
 
 
@@ -126,12 +169,14 @@ def generate_midi(data, sample_rate):
     top_freqs = compute_top_frequencies(db, n_peaks=5)
     
     postprocess(top_freqs)
+    s = make_stream(top_freqs)
+    write_stream("yuzo.mid", s)
 
-    piece = []
-    for freqs, intensities in top_freqs:
-        # piece.append(make_chord(freqs))
-        piece.append(make_chord_with_velocity(freqs, intensities))
-    write("yuzo2.mid", piece)
+    # piece = []
+    # for freqs, intensities in top_freqs:
+    #     # piece.append(make_chord(freqs))
+    #     piece.append(make_chord_with_velocity(freqs, intensities))
+    # write("yuzo2.mid", piece)
 
 
 def plot_spec(spec):
