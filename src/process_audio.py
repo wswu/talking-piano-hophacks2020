@@ -87,6 +87,35 @@ def write(path, piece):
     s.write("midi", path)
 
 
+def squash_outliers(seq):
+    result = seq[:]
+    for i, x in enumerate(seq):
+        if i == 0 or i == len(seq) - 1:
+            continue
+        if seq[i - 1] == seq[i + 1]:
+            result[i] = seq[i - 1]
+    return result
+
+
+def postprocess(top_freqs):
+    # for (i, freqs_ints) in enumerate(top_freqs):
+    #     if i == 0 or i == len(top_freqs) - 1:
+    #         continue
+    #     freqs, ints = freqs_ints
+    #     for voice in range(len(freqs)):
+    #         if top_freqs[i - 1][0][voice] == top_freqs[i + 1][0][voice]:
+    #             top_freqs[i][0][voice] = top_freqs[i - 1][0][voice]
+
+    freqs = np.array([f for (f, i) in top_freqs])
+    by_voice = freqs.T
+    for i in range(len(by_voice)):
+        by_voice[i] = savgol_filter(by_voice[i], 5, 1)
+    
+    new_freqs = by_voice.T
+    for i in range(len(new_freqs)):
+        top_freqs[i] = (new_freqs[i], top_freqs[i][1])
+
+
 def generate_midi(data, sample_rate):
     # spec = librosa.feature.melspectrogram(y=data.T[0], sr=sample_rate, n_fft=20000)
 
@@ -96,11 +125,13 @@ def generate_midi(data, sample_rate):
 
     top_freqs = compute_top_frequencies(db, n_peaks=5)
     
+    postprocess(top_freqs)
+
     piece = []
     for freqs, intensities in top_freqs:
         # piece.append(make_chord(freqs))
         piece.append(make_chord_with_velocity(freqs, intensities))
-    write("yuzo.mid", piece)
+    write("yuzo2.mid", piece)
 
 
 def plot_spec(spec):
