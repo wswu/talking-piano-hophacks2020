@@ -37,6 +37,19 @@ def make_chord(freqs):
         c.duration = duration.Duration(0.25)
     return c
 
+def make_chord_with_velocity(freqs, intensities):
+    c = chord.Chord()
+    for hz, ints in zip(freqs, intensities):
+        p = pitch.Pitch()
+        p.frequency = hz
+        n = note.Note()
+        n.pitch = p
+        
+        n.volume.velocity = 100 - abs(ints)
+
+        c.add(n)  # TODO: only include if it was not in the previous n chords
+        c.duration = duration.Duration(0.25)
+    return c
 
 def mute_low_volume(seq):
     return [x if x > -40 else -100 for x in seq]
@@ -85,9 +98,9 @@ def generate_midi(data, sample_rate):
     
     piece = []
     for freqs, intensities in top_freqs:
-        piece.append(make_chord(freqs))
-        
-    write("winston.mid", piece)
+        # piece.append(make_chord(freqs))
+        piece.append(make_chord_with_velocity(freqs, intensities))
+    write("yuzo.mid", piece)
 
 
 def plot_spec(spec):
@@ -110,7 +123,7 @@ def plot_db(timeslice):
     
 
 def main():
-    data, sample_rate = sf.read("data/winston.wav", dtype='float32')
+    data, sample_rate = sf.read("data/yuzo.wav", dtype='float32')
     generate_midi(data, sample_rate)
 
 
