@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<MidiOptions>
+	<!-- Quantization:
+		0 = 1/4
+		1 = 1/8
+		2 = 1/16
+		3 = 1/32
+		4 = 1/64
+		5 = 1/128
+	-->
+	<QuantValue>5</QuantValue>
+
+	<!-- Number of Voices: value + 1
+		a value of 0 means 1 voice
+		a value of 3 means 4 voices
+	-->
+	<VoiceCount>3</VoiceCount>
+
+	<!-- list of supported Tuplets: true or false per type -->
+	<Duplets>false</Duplets>
+	<Triplets>true</Triplets>
+	<Quadruplets>true</Quadruplets>
+	<Quintuplets>true</Quintuplets>
+	<Septuplets>true</Septuplets>
+	<Nonuplets>true</Nonuplets>
+
+	<!-- reduces accuracy in favor of readability -->
+	<HumanPerformance>false</HumanPerformance>
+	<!-- halves measure count obtained from using HumanPerformance=true -->
+	<MeasureCount2xLess>false</MeasureCount2xLess>
+
+	<!-- mainly for piano/drum tracks -->
+	<SplitStaff>true</SplitStaff>
+
+	<!-- small clefs can be insterted to keep chords closer to the 5 staff lines -->
+	<ClefChanges>true</ClefChanges>
+
+	<!-- reduces number of rests to more "simple" durations -->
+	<SimplifyDurations>true</SimplifyDurations>
+
+	<!-- show/hide staccato markings -->
+	<ShowStaccato>true</ShowStaccato>
+
+	<!-- use dotted notes or ties -->
+	<DottedNotes>true</DottedNotes>
+
+	<!-- do not use a different time signature for the first bar when shorter than the second bar -->
+	<RecognizePickupBar>true</RecognizePickupBar>
+
+	<!-- Try to detect swing and automatically replace a pattern of 4th + 8th notes
+			in triplets (for the most common swing feel, 2:1),
+			or a dotted 8th + 16th pattern (for shuffle, 3:1),
+		with two straight 8ths and a “Swing” or “Shuffle” text at the beginning.
+
+		0: No Detection
+		1: Shuffle
+		2: Swing
+	-->
+	<Swing>2</Swing>
+
+</MidiOptions>
