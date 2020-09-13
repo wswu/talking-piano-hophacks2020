@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Sep 11 23:52:32 2020
-
-@author: yuzoi
-"""
-
-import os
-import visualize_midi as mp
 import configparser
+import os
+
+import visualize_midi as mp
 import ffmpeg
 
 
@@ -28,6 +22,7 @@ def visualize(input_midi, output_mp4):
     input_video = ffmpeg.input(output_mp4)
     input_audio = ffmpeg.input(input_midi)
     # ffmpeg.concat(input_video, input_audio, v=1, a=1).output(output_mp4).run()
+
 
 def main():
     visualize("output.mid", "output.mp4")

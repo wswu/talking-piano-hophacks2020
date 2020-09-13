@@ -18,10 +18,9 @@ class WebApp(object):
 
     @cherrypy.expose
     def upload(self, fileToUpload, n_voices, keydiff_threshold, submit):
-        name = fileToUpload.filename
-        print('name ', name)
-        dir_prefix = f'src/website/html5up-dimension/products/{name}-{n_voices}-{keydiff_threshold}'
-
+        name = fileToUpload.filename + '-' + str(n_voices) + '-' + str(keydiff_threshold)
+        dir_prefix = f'src/website/html5up-dimension/products/' + name 
+ 
         with open("input.wav", "wb") as fout:
             fout.write(fileToUpload.file.read())
 
@@ -44,11 +43,9 @@ class WebApp(object):
         with open("src/website/html5up-dimension/pianotalks.html") as f:
             return f.read().replace("OUTPUT_FILENAME", name)
 
+
     @cherrypy.expose
     def survey(self, *args, **kwargs):
-        # return "hi"
-        print(args)
-        print(kwargs)
         raise cherrypy.HTTPRedirect('/')
     
 
@@ -67,10 +64,5 @@ if __name__ == '__main__':
             'tools.staticdir.on': True,
             'tools.staticdir.dir': './src/website/html5up-dimension'
         }
-
-        # [/style.css]
-        # tools.staticfile.on = True
-        # tools.staticfile.filename = "src/website/html5up-dimension/assets/css/main.css"
-
     }
     cherrypy.quickstart(WebApp(), '/', config=conf)
