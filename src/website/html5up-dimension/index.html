@@ -31,10 +31,7 @@
 						<nav>
 							<ul>
 								<li><a href="#intro">Try</a></li>
-								<!--<li><a href="#work">Work</a></li>-->
-								<!--<li><a href="#contact">Feedback</a></li>-->
-								<li><a href="#survey">survey</a></li>
-								<!--<li><a href="#elements">Elements</a></li>-->
+								<li><a href="#survey">Feedback</a></li>
 							</ul>
 						</nav>
 					</header>
@@ -50,9 +47,9 @@
 								<body>
 										<form action="upload" method="post" enctype="multipart/form-data">
 											<input type="file" name="fileToUpload" id="fileToUpload"><br>
-											# voices: <output id='n_voices_out'>12</output>
+											Number of players: <output id='n_voices_out'>12</output>
 												<input type="range" min="1" max="16" value="12" class="slider" id="n_voices" oninput='n_voices_out.value = n_voices.value'><br>
-											Keydiff Threshold: <output id='keydiff_out'>1</output>
+											Difficulty Level (1 = Extremely Difficult, 6 = Easy): <output id='keydiff_out'>1</output>
 												<input type="range" min="1" max="6" value="1" class="slider" id="keydiff_threshold" oninput='keydiff_out.value = keydiff_threshold.value'><br><br>
 											<input type="submit" value="Upload Audio" name="submit" onClick='showProcessingText();'>
 										</form>

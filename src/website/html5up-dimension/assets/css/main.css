@@ -1706,7 +1706,21 @@ input, select, textarea {
 		}
 
 		/* The slider itself */
+
 		.slider {
+  -webkit-appearance: none;  /* Override default CSS styles */
+  appearance: none;
+  width: 100%; /* Full-width */
+  height: 25px; /* Specified height */
+  background: transparent; /* Grey background */
+	border-radius: 4px;
+  outline: 0; /* Remove outline */
+  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+}
+
+		/* .slider {
 
 			-moz-appearance: none;
 			-webkit-appearance: none;
@@ -1734,7 +1748,7 @@ input, select, textarea {
 			text-decoration: none;
 			text-transform: uppercase;
 			white-space: nowrap;
-		}
+		} */
 
 		/* Mouse-over effects */
 		.slider:hover {
@@ -1747,13 +1761,23 @@ input, select, textarea {
 		  appearance: none;
 		  width: 25px; /* Set a specific slider handle width */
 		  height: 25px; /* Slider handle height */
-		  background: #4CAF50; /* Green background */
+		  background: #6a5c7a; /* Green background */
 		  cursor: pointer; /* Cursor on hover */
 		}
 
 		.slider::-moz-range-thumb {
 		  width: 25px; /* Set a specific slider handle width */
 		  height: 25px; /* Slider handle height */
-		  background: #4CAF50; /* Green background */
+		  background: #6a5c7a; /* Green background */
 		  cursor: pointer; /* Cursor on hover */
+		}
+
+		input[type="range"]::-webkit-slider-runnable-track {
+		 background: tomato;
+		 height: 5px;
+		}
+
+		input[type="range"]::-moz-range-track {
+		 background: tomato;
+		 height: 5px;
 		}
