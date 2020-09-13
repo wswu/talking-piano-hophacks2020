@@ -30,7 +30,7 @@
 						</div>
 						<nav>
 							<ul>
-								<li><a href="#intro">Try</a></li>
+								<li><a href="#intro" onclick='hideProcessingText();'>Try</a></li>
 								<li><a href="#survey">Feedback</a></li>
 							</ul>
 						</nav>
@@ -48,14 +48,17 @@
 										<form action="upload" method="post" enctype="multipart/form-data">
 											<input type="file" name="fileToUpload" id="fileToUpload"><br>
 											Number of players: <output id='n_voices_out'>12</output>
-												<input type="range" min="1" max="16" value="12" class="slider" id="n_voices" oninput='n_voices_out.value = n_voices.value'><br>
+												<input type="range" min="1" max="16" value="12" class="slider" name="n_voices" id="n_voices" oninput='n_voices_out.value = n_voices.value; hideProcessingText();'><br>
 											Difficulty Level (1 = Extremely Difficult, 6 = Easy): <output id='keydiff_out'>1</output>
-												<input type="range" min="1" max="6" value="1" class="slider" id="keydiff_threshold" oninput='keydiff_out.value = keydiff_threshold.value'><br><br>
+												<input type="range" min="1" max="6" value="1" class="slider" name="keydiff_threshold" id="keydiff_threshold" oninput='keydiff_out.value = keydiff_threshold.value; hideProcessingText();'><br><br>
 											<input type="submit" value="Upload Audio" name="submit" onClick='showProcessingText();'>
 										</form>
 										<script>
 										function showProcessingText() {
 											document.getElementById("processingText").style.display = "block";
+										};
+										function hideProcessingText() {
+											document.getElementById("processingText").style.display = "none";
 										};
 										</script>
 										<div id="processingText" style="display: none;">Processing...</div>
@@ -92,21 +95,29 @@
 
 						<!-- Survey -->
 							<article id="survey">
+								<script>
+									function showRecordedText() {
+										document.getElementById("recordedText").style.display = "block";
+									};
+									function hideRecordedText() {
+										document.getElementById("recordedText").style.display = "none";
+									};
+									</script>
 								<h2 class="major">Can you understand me?</h2>
-								<form method="post" action="#">
+								<form method="post" action="survey">
 									<div class = "fields">
-									<div class="field">
-									    <input type="checkbox" id="yes" name="subscribe" value="newsletter">
-									    <label for="yes">YES</label>
-									  </div>
 										<div class="field">
-												<input type="checkbox" id="partially" name="subscribe" value="newsletter">
-												<label for="partially">Partially</label>
-											</div>
+											<input type="checkbox" id="yes" name="yes" value="newsletter">
+											<label for="yes">YES</label>
+									  	</div>
 										<div class="field">
-												<input type="checkbox" id="no" name="subscribe" value="newsletter">
-												<label for="no">No</label>
-											</div>
+											<input type="checkbox" id="partially" name="partially" value="newsletter">
+											<label for="partially">Partially</label>
+										</div>
+										<div class="field">
+											<input type="checkbox" id="no" name="no" value="newsletter">
+											<label for="no">No</label>
+										</div>
 										<div class="field">
 											<label for="message">Message</label>
 											<textarea name="message" id="message" rows="4"></textarea>
@@ -116,6 +127,7 @@
 										<li><input type="submit" value="Send Message" class="primary" /></li>
 										<li><input type="reset" value="Reset" /></li>
 									</ul>
+									<div id="recordingText" style="display: none;">Thanks for your feedback!</div>
 								</form>
 								<ul class="icons">
 									<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
@@ -402,7 +414,7 @@ print 'It took ' + i + ' iterations to sort the deck.';</code></pre>
 
 				<!-- Footer -->
 					<footer id="footer">
-						<p class="copyright">&copy; Untitled. Design: <a href="https://html5up.net">HTML5 UP</a>.</p>
+						<p class="copyright">&copy; The Procrustables. Design: <a href="https://html5up.net">HTML5 UP</a>.</p>
 					</footer>
 
 			</div>

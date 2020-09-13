@@ -24,17 +24,22 @@
 						<!-- Intro -->
 							<!-- <article id="results"> -->
 								<h2 class="minor">Hurray! Piano talks like you now.</h2>
-								<h3 class="minor"> Click  <a href="products/output.pdf" style="font-size: 20pt" target="_blank">
+								<h3 class="minor"> Click  <a href="/static/products/OUTPUT_FILENAME-output.pdf" style="font-size: 20pt" target="_blank">
 								HERE</a> to download sheet music. </h3>
-								<audio src="/static/products/output.mp3"
+								<audio src="/static/products/OUTPUT_FILENAME-output.mp3"
   type="audio/mpeg"
   controls>
   		I'm sorry. Your browser doesn't support HTML5 <code>audio</code>.
 								</audio>
-								<video width="512" height="384" src="/static/products/output.mp4" controls>
+								<video width="512" height="384" src="/static/products/OUTPUT_FILENAME-output.mp4" controls>
 								  Sorry, your browser doesn't support HTML5 <code>video</code>, but you can download this video from the <a href="/static/products/final.mp4" target="_blank">Internet Archive</a>.
 								</video>
-								<a href= "index.html"> Back </a>
+								
+								<form action="goback" method="post">
+									<ul class="actions">
+										<li><input type="submit" value="Back" /></li>
+									</ul>
+								</form>
 
 							<div id="main">
 
@@ -357,7 +362,7 @@ print 'It took ' + i + ' iterations to sort the deck.';</code></pre>
 
 				<!-- Footer -->
 					<footer id="footer">
-						<p class="copyright">&copy; Untitled. Design: <a href="https://html5up.net">HTML5 UP</a>.</p>
+						<p class="copyright">&copy; The Procrustables. Design: <a href="https://html5up.net">HTML5 UP</a>.</p>
 					</footer>
 
 			</div>
