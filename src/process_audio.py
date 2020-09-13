@@ -40,7 +40,7 @@ def make_note(freq, dur, vol):
     return n
 
 
-def make_stream(top_freqs):
+def make_stream(top_freqs, keydiff_threshold=1):
     s = stream.Stream()
 
     freqs = np.array([f for (f, i) in top_freqs])
@@ -54,7 +54,7 @@ def make_stream(top_freqs):
         vol = db_to_vol(ints[0],last_freq)
 
         for note_idx in range(1, len(voice)):
-            if keydiff(voice[note_idx], last_freq) >= 1:
+            if keydiff(voice[note_idx], last_freq) >= keydiff_threshold:
                 n = make_note(last_freq, dur, vol)
                 par.append(n)
 
@@ -156,13 +156,16 @@ def postprocess(top_freqs):
     for i in range(len(new_freqs)):
         top_freqs[i] = (new_freqs[i], top_freqs[i][1])
 
-
-def generate_midi(data, sample_rate, output_file):
+'''
+params:
+    - n_peaks::Int = number of voices
+    - keydiff_threshold::Int = how different the key should be for grouping long notes
+'''
+def generate_midi(data, sample_rate, output_file, **params):
     spec = librosa.stft(data.T[0], n_fft=4096, hop_length=512)
     db = librosa.amplitude_to_db(spec, ref=np.max)
-    top_freqs = compute_top_frequencies(db, n_peaks=12)
-    # postprocess(top_freqs)
-    s = make_stream(top_freqs)
+    top_freqs = compute_top_frequencies(db, params['n_peaks'])
+    s = make_stream(top_freqs, params['keydiff_threshold'])
     write_stream(output_file, s)
 
 
@@ -191,9 +194,10 @@ def wav2midi(input_wav, output_midi, **args):
     data, sample_rate = sf.read(input_wav, dtype='float32')
     generate_midi(data, sample_rate, output_midi)
 
+
 def main():
-    data, sample_rate = sf.read("data/hello.wav", dtype='float32')
-    generate_midi(data, sample_rate, "hello.mid")
+    data, sample_rate = sf.read("data/yuzo.wav", dtype='float32')
+    generate_midi(data, sample_rate, "yuzo.mid")
 
 
 if __name__ == "__main__":
