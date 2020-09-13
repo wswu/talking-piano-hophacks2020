@@ -20,7 +20,7 @@ class WebApp(object):
     def upload(self, fileToUpload, n_voices, keydiff_threshold, submit):
         name = fileToUpload.filename
         print('name ', name)
-        dir_prefix = 'src/website/html5up-dimension/products/' + name
+        dir_prefix = f'src/website/html5up-dimension/products/{name}-{n_voices}-{keydiff_threshold}'
 
         with open("input.wav", "wb") as fout:
             fout.write(fileToUpload.file.read())
