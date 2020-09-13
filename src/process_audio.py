@@ -9,6 +9,8 @@ from music21 import *
 '''
 returns sorted list of (idx, value)
 '''
+
+
 def peaks(seq):
     data = []
     for i, x in enumerate(seq):
@@ -19,41 +21,23 @@ def peaks(seq):
     return sorted(data, key=lambda x: -x[1])
 
 
-def make_chord(freqs):
-    c = chord.Chord()
-    for hz in freqs:
-        p = pitch.Pitch()
-        p.frequency = hz
-        n = note.Note()
-        n.pitch = p
-
-        n.volume.velocity = 80
-        if hz > 1000:
-            n.volume.velocity *= 0.8
-        if hz > 2000:
-            n.volume.velocity *= 0.8
-
-        c.add(n)  # TODO: only include if it was not in the previous n chords
-        c.duration = duration.Duration(0.25)
-    return c
-
-def make_chord_with_velocity(freqs, intensities):
-    c = chord.Chord()
-    for hz, ints in zip(freqs, intensities):
-        p = pitch.Pitch()
-        p.frequency = hz
-        n = note.Note()
-        n.pitch = p
-
-        n.volume.velocity = 100 - abs(ints)
-
-        c.add(n)  # TODO: only include if it was not in the previous n chords
-        c.duration = duration.Duration(0.25)
-    return c
-
-
 def db_to_vol(db):
-    return max(0, 127 - 3 * abs(db))
+    transformed = 127 - 3 * abs(db)
+    return transformed if transformed > 32 else 0
+
+
+def keydiff(freq1, freq2):
+    return abs(12 * np.log2(freq1 / freq2))
+
+
+def make_note(freq, dur, vol):
+    n = note.Note()
+    p = pitch.Pitch()
+    p.frequency = freq
+    n.pitch = p
+    n.duration = duration.Duration(dur)
+    n.volume.velocity = vol
+    return n
 
 
 def make_stream(top_freqs):
@@ -65,65 +49,63 @@ def make_stream(top_freqs):
     print(np.shape(freqs.T))
     for voice, ints in zip(freqs.T, intensities.T):
         par = stream.Part()
-        # offset = 0
-        freq = voice[0]
+        last_freq = voice[0]
         dur = 0.25
         vol = db_to_vol(ints[0])
 
         for note_idx in range(1, len(voice)):
-            if voice[note_idx] != freq:
-                n = note.Note()
-                p = pitch.Pitch()
-                p.frequency = freq
-                n.pitch = p
-                n.duration = duration.Duration(dur)
-                n.volume.velocity = vol
+            if keydiff(voice[note_idx], last_freq) >= 3:
+                n = make_note(last_freq, dur, vol)
                 par.append(n)
 
-                # s.insertIntoNoteOrChord(offset, n)
-                # offset += dur
-
                 # reset
-                freq = voice[note_idx]
+                last_freq = voice[note_idx]
                 dur = 0.25
                 vol = db_to_vol(ints[note_idx])
             else:
                 dur += 0.25
 
-        n = note.Note()
-        p = pitch.Pitch()
-        p.frequency = freq
-        n.pitch = p
-        n.duration = duration.Duration(dur)
-        n.volume.velocity = vol
+        n = make_note(last_freq, dur, vol)
         par.append(n)
         s.insert(0, par)
-    return s #.chordify()
+    return s  # .chordify()
 
-ZERO_VOLUME = -80 # dB
+
+ZERO_VOLUME = -80  # dB
 
 def mute_low_volume(seq):
     return [x if x > -60 else ZERO_VOLUME for x in seq]
+
+
+def make_bin2freq(sr, n_fft):
+    return dict(enumerate(librosa.fft_frequencies(sr=sr, n_fft=n_fft)))
+
 
 '''
 return [(pitches, intensities), ... for each time step]
 '''
 def compute_top_frequencies(spec, n_peaks):
-    bin2freq = dict(enumerate(librosa.fft_frequencies(sr=48000, n_fft=4096)))
+    bin2freq = make_bin2freq(sr=48000, n_fft=4096)
     top_freqs = []
     for time_slice in spec.T:
         pitches = []
         intensities = []
-        time_slice = time_slice[:172]  # remove high frequencies (2048: bin 128 = 3000 Hz, bin 86 = 2015 Hz)
-        # 4096: 256 = 3000 Hz, 172 = 2015 Hz
 
+        # remove high frequencies
+        # 4096: 256 = 3000 Hz, 172 = 2015 Hz
+        time_slice = time_slice[:172]
+
+        # silence murmurs
         time_slice = mute_low_volume(time_slice)
 
         # filter out frequencies < 70 Hz
         for i in range(6):
             time_slice[i] = ZERO_VOLUME
 
-        time_slice = savgol_filter(time_slice, 9, 3)  # smooth the curve
+        # smooth the frequencies
+        time_slice = savgol_filter(time_slice, 9, 3)  
+
+        # store with intensity
         for (idx, value) in peaks(time_slice)[:n_peaks]:
             hz = bin2freq[idx]
             pitches.append(hz)
@@ -132,19 +114,12 @@ def compute_top_frequencies(spec, n_peaks):
 
         # account for not enough peaks (silence)
         while len(pitches) < n_peaks:
-            pitches.append(0)
+            pitches.append(1)
             intensities.append(ZERO_VOLUME)
 
         top_freqs.append((pitches, intensities))
     return top_freqs
 
-
-def write(path, piece):
-    s = stream.Stream()
-    s.append(tempo.MetronomeMark(number=1000))
-    for chord in piece:
-        s.append(chord)
-    s.write("midi", path)
 
 def write_stream(path, s):
     s.insert(0, tempo.MetronomeMark(number=1500))
@@ -181,31 +156,21 @@ def postprocess(top_freqs):
         top_freqs[i] = (new_freqs[i], top_freqs[i][1])
 
 
-def generate_midi(data, sample_rate):
-    # spec = librosa.feature.melspectrogram(y=data.T[0], sr=sample_rate, n_fft=20000)
-
+def generate_midi(data, sample_rate, output_file):
     spec = librosa.stft(data.T[0], n_fft=4096, hop_length=512)
-
     db = librosa.amplitude_to_db(spec, ref=np.max)
-
     top_freqs = compute_top_frequencies(db, n_peaks=5)
-
     # postprocess(top_freqs)
     s = make_stream(top_freqs)
-    write_stream("yuzo.mid", s)
-
-    # piece = []
-    # for freqs, intensities in top_freqs:
-    #     # piece.append(make_chord(freqs))
-    #     piece.append(make_chord_with_velocity(freqs, intensities))
-    # write("erhu.mid", piece)
+    write_stream(output_file, s)
 
 
 def plot_spec(spec):
     fig, ax = plt.subplots()
     # S_dB = librosa.power_to_db(spec, ref=np.max)
     # img = librosa.display.specshow(S_dB, x_axis='time', y_axis='mel', sr=sample_rate, fmax=8000, ax=ax)
-    img = librosa.display.specshow(librosa.amplitude_to_db(spec, ref=np.max),y_axis='log', x_axis='time', ax=ax)
+    img = librosa.display.specshow(librosa.amplitude_to_db(
+        spec, ref=np.max), y_axis='log', x_axis='time', ax=ax)
     fig.colorbar(img, ax=ax, format='%+2.0f dB')
     ax.set(title='stft')
     plt.savefig("plot.png")
@@ -222,8 +187,8 @@ def plot_db(timeslice):
 
 
 def main():
-    data, sample_rate = sf.read("data/yuzo.wav", dtype='float32')
-    generate_midi(data, sample_rate)
+    data, sample_rate = sf.read("data/conv2.wav", dtype='float32')
+    generate_midi(data, sample_rate, "conv2.mid")
 
 
 if __name__ == "__main__":
