@@ -8,7 +8,6 @@ import argparse
 import configparser
 
 import midi
-import note
 
 class Note(object):
     def __init__(
@@ -151,7 +150,7 @@ def create_video(note_tracks, config):
     start_time = float(config["start_time"])
     time_before_current = float(config["time_before_current"])
     time_after_current = float(config["time_after_current"])
-    mov_filename = str(config["mp4_filename"]) 
+    mov_filename = str(config["mp4_filename"])
 
     pitch_min, pitch_max = get_pitch_min_max(note_tracks)
     if config["pitch_min"] != "auto":

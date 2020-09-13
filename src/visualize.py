@@ -6,7 +6,7 @@ Created on Fri Sep 11 23:52:32 2020
 """
 
 import os
-import main as mp
+import visualize_midi as mp
 import configparser
 import ffmpeg
 
