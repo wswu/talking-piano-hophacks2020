@@ -103,7 +103,7 @@ def compute_top_frequencies(spec, n_peaks):
             time_slice[i] = ZERO_VOLUME
 
         # smooth the frequencies
-        time_slice = savgol_filter(time_slice, 9, 3)  
+        time_slice = savgol_filter(time_slice, 9, 3)
 
         # store with intensity
         for (idx, value) in peaks(time_slice)[:n_peaks]:
@@ -185,6 +185,10 @@ def plot_db(timeslice):
     plt.xscale('log')
     plt.show()
 
+
+def wav2midi(input_wav, output_midi, **args):
+    data, sample_rate = sf.read(input_wav, dtype='float32')
+    generate_midi(data, sample_rate, output_midi)
 
 def main():
     data, sample_rate = sf.read("data/conv2.wav", dtype='float32')
