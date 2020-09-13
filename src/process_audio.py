@@ -16,13 +16,13 @@ def peaks(seq):
     for i, x in enumerate(seq):
         if i <= 1 or i >= len(seq) - 2:
             continue
-        if seq[i - 2] < seq[i - 1] < x and seq[i + 2] < seq[i + 1] < x:
-            data.append((i, x))
+    #    if seq[i - 2] < seq[i - 1] < x and seq[i + 2] < seq[i + 1] < x:
+        data.append((i, x))
     return sorted(data, key=lambda x: -x[1])
 
 
-def db_to_vol(db):
-    transformed = 127 - 3 * abs(db)
+def db_to_vol(db,freq):
+    transformed = np.fix(np.float((127 - 3 * abs(db)) )* np.exp(-freq/2000))
     return transformed if transformed > 32 else 0
 
 
@@ -51,17 +51,17 @@ def make_stream(top_freqs):
         par = stream.Part()
         last_freq = voice[0]
         dur = 0.25
-        vol = db_to_vol(ints[0])
+        vol = db_to_vol(ints[0],last_freq)
 
         for note_idx in range(1, len(voice)):
-            if keydiff(voice[note_idx], last_freq) >= 3:
+            if keydiff(voice[note_idx], last_freq) >= 1:
                 n = make_note(last_freq, dur, vol)
                 par.append(n)
 
                 # reset
                 last_freq = voice[note_idx]
                 dur = 0.25
-                vol = db_to_vol(ints[note_idx])
+                vol = db_to_vol(ints[note_idx], last_freq)
             else:
                 dur += 0.25
 
@@ -108,9 +108,10 @@ def compute_top_frequencies(spec, n_peaks):
         # store with intensity
         for (idx, value) in peaks(time_slice)[:n_peaks]:
             hz = bin2freq[idx]
-            pitches.append(hz)
-            intensities.append(value)
-        pitches.sort()
+            if hz not in pitches:
+                pitches.append(hz)
+                intensities.append(value)
+        #pitches.sort()
 
         # account for not enough peaks (silence)
         while len(pitches) < n_peaks:
@@ -159,7 +160,7 @@ def postprocess(top_freqs):
 def generate_midi(data, sample_rate, output_file):
     spec = librosa.stft(data.T[0], n_fft=4096, hop_length=512)
     db = librosa.amplitude_to_db(spec, ref=np.max)
-    top_freqs = compute_top_frequencies(db, n_peaks=5)
+    top_freqs = compute_top_frequencies(db, n_peaks=12)
     # postprocess(top_freqs)
     s = make_stream(top_freqs)
     write_stream(output_file, s)
@@ -191,8 +192,8 @@ def wav2midi(input_wav, output_midi, **args):
     generate_midi(data, sample_rate, output_midi)
 
 def main():
-    data, sample_rate = sf.read("data/conv2.wav", dtype='float32')
-    generate_midi(data, sample_rate, "conv2.mid")
+    data, sample_rate = sf.read("data/hello.wav", dtype='float32')
+    generate_midi(data, sample_rate, "hello.mid")
 
 
 if __name__ == "__main__":
