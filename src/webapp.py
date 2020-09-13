@@ -6,6 +6,8 @@ import shutil
 import cherrypy
 
 import process_audio
+import musescore_call
+import visualize
 
 class WebApp(object):
     @cherrypy.expose
@@ -19,10 +21,12 @@ class WebApp(object):
 
         with open("input.wav", "wb") as fout:
             fout.write(fileToUpload.file.read())
-            # shutil.copyfileobj(fileToUpload, fout)
 
         process_audio.wav2midi("input.wav", "output.mid")
-
+        musescore_call.generate_pdf("output.mid", "output.pdf")
+        musescore_call.generate_mp3("output.mid", "output.mp3")
+        visualize.visualize("output.mid", "output.mp4")
+        
         return f"you uploaded {fileToUpload}"
 
 
