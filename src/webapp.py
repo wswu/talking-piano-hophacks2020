@@ -14,20 +14,29 @@ class WebApp(object):
     def index(self):
         with open("src/website/html5up-dimension/index.html") as f:
             return f.read()
+
+
     @cherrypy.expose
-    def upload(self, fileToUpload, submit):
-        print(fileToUpload.filename)
+    def upload(self, fileToUpload, n_voices, keydiff_threshold, submit):
         dir_prefix = 'src/website/html5up-dimension/products/'
 
         with open("input.wav", "wb") as fout:
             fout.write(fileToUpload.file.read())
 
-        process_audio.wav2midi("input.wav", dir_prefix+"output.mid")
+        print('processing audio')        
+        process_audio.wav2midi("input.wav", dir_prefix+"output.mid",  {'n_peaks': int(n_voices), 'keydiff_threshold': int(keydiff_threshold)})
+
+        print('generating pdf')
         musescore_call.generate_pdf(dir_prefix+"output.mid", dir_prefix+"output.pdf")
+        
+        print('generating mp3')
         musescore_call.generate_mp3(dir_prefix+"output.mid", dir_prefix+"output.mp3")
+
+        print('generating video')
         visualize.visualize(dir_prefix+"output.mid", dir_prefix+"output.mp4")
 
-        return f"you uploaded {fileToUpload}"
+        with open("src/website/html5up-dimension/pianotalks.html") as f:
+            return f.read()
 
 
 if __name__ == '__main__':

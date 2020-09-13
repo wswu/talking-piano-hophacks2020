@@ -161,7 +161,8 @@ params:
     - n_peaks::Int = number of voices
     - keydiff_threshold::Int = how different the key should be for grouping long notes
 '''
-def generate_midi(data, sample_rate, output_file, **params):
+def generate_midi(data, sample_rate, output_file, params):
+    print(params)
     spec = librosa.stft(data.T[0], n_fft=4096, hop_length=512)
     db = librosa.amplitude_to_db(spec, ref=np.max)
     top_freqs = compute_top_frequencies(db, params['n_peaks'])
@@ -190,9 +191,9 @@ def plot_db(timeslice):
     plt.show()
 
 
-def wav2midi(input_wav, output_midi, **args):
+def wav2midi(input_wav, output_midi, params):
     data, sample_rate = sf.read(input_wav, dtype='float32')
-    generate_midi(data, sample_rate, output_midi)
+    generate_midi(data, sample_rate, output_midi, params)
 
 
 def main():
