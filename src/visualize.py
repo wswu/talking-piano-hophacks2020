@@ -8,6 +8,7 @@ Created on Fri Sep 11 23:52:32 2020
 import os
 import main as mp
 import configparser
+import ffmpeg
 
 
 def visualize(input_midi, output_mp4):
@@ -20,7 +21,9 @@ def visualize(input_midi, output_mp4):
         config.write(f)
 
     mp.main(CONFIG=configfile)
-
+    input_video = ffmpeg.input(output_mp4)
+    input_audio = ffmpeg.input(input_midi)
+    ffmpeg.concat(input_video, input_audio, v=1, a=1).output(output_mp4).run()
 
 def main():
     visualize("output.mid", "output.mp4")
